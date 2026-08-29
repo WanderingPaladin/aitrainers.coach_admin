@@ -138,6 +138,18 @@ export default function ApplicationDetailPage() {
           <Field label="IP location" value={application.ipLocation} />
           <Field label="LinkedIn" value={application.linkedinUrl} />
           <Field label="Path" value={application.path.replace('_', ' ')} />
+          <Field
+            label="Applicant stage"
+            value={
+              application.applicant_stage === 'new_no_account'
+                ? "New, no account yet"
+                : application.applicant_stage === 'has_accounts_no_time'
+                  ? 'Has accounts, not enough time'
+                  : application.applicant_stage === 'working_no_progress'
+                    ? 'Working, not enough progress'
+                    : application.applicant_stage
+            }
+          />
         </dl>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-6">

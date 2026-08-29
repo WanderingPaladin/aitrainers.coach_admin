@@ -22,6 +22,7 @@ export type Application = {
   goals: string;
   ipAddress: string | null;
   ipLocation: string | null;
+  applicant_stage: 'new_no_account' | 'has_accounts_no_time' | 'working_no_progress' | null;
   status: ApplicationStatus;
   createdAt: string;
   updatedAt: string;
