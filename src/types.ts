@@ -1,5 +1,21 @@
 export const STATUSES = ['submitted', 'booked', 'reviewed', 'advanced', 'declined'] as const;
 
+export function formatYearsOfAiTraining(years: number): string {
+  if (years <= 0) {
+    return 'New to AI training';
+  }
+  if (years === 1) {
+    return '1';
+  }
+  if (years === 2) {
+    return '2';
+  }
+  if (years === 3) {
+    return '3';
+  }
+  return '3+';
+}
+
 export type ApplicationStatus = (typeof STATUSES)[number];
 export type BookingStatus = 'confirmed' | 'cancelled';
 
@@ -23,6 +39,7 @@ export type Application = {
   ipAddress: string | null;
   ipLocation: string | null;
   applicant_stage: 'new_no_account' | 'has_accounts_no_time' | 'working_no_progress' | null;
+  referral_source: string | null;
   status: ApplicationStatus;
   createdAt: string;
   updatedAt: string;

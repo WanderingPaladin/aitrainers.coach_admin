@@ -14,9 +14,9 @@ function bookingApiOrigin(env: Record<string, string>): string {
     )
     .map((iface) => iface.address);
   if (publicIpv4[0]) {
-    return `http://${publicIpv4[0]}:5000`;
+    return `http://${publicIpv4[0]}:4000`;
   }
-  return 'http://127.0.0.1:5000';
+  return 'http://127.0.0.1:4000';
 }
 
 export default defineConfig(({ mode }) => {

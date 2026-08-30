@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { cancelBooking, getApplication, updateApplicationStatus } from '../api';
 import Layout from '../components/Layout';
 import StatusBadge from '../components/StatusBadge';
-import { STATUSES, type ApplicationDetail, type ApplicationStatus } from '../types';
+import { STATUSES, formatYearsOfAiTraining, type ApplicationDetail, type ApplicationStatus } from '../types';
 
 function formatWhen(value: string, timeZone?: string) {
   return new Intl.DateTimeFormat('en-US', {
@@ -131,7 +131,7 @@ export default function ApplicationDetailPage() {
           <Field label="Phone" value={application.phone} />
           <Field label="City / state" value={`${application.city}, ${application.state}`} />
           <Field label="Profession" value={application.profession} />
-          <Field label="Years of AI training" value={application.yearsOfExperience} />
+          <Field label="Years of AI training" value={formatYearsOfAiTraining(application.yearsOfExperience)} />
           <Field label="Timezone" value={application.timezone} />
           <Field label="Applied" value={formatWhen(application.createdAt)} />
           <Field label="IP" value={application.ipAddress} />
@@ -150,6 +150,7 @@ export default function ApplicationDetailPage() {
                     : application.applicant_stage
             }
           />
+          <Field label="Where they found us" value={application.referral_source} />
         </dl>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-6">

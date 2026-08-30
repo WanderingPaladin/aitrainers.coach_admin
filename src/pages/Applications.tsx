@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { listApplications } from '../api';
 import Layout from '../components/Layout';
 import StatusBadge from '../components/StatusBadge';
-import { STATUSES, type Application, type ApplicationStatus } from '../types';
+import { STATUSES, formatYearsOfAiTraining, type Application, type ApplicationStatus } from '../types';
 
 function formatWhen(value: string) {
   return new Intl.DateTimeFormat('en-US', {
@@ -132,7 +132,7 @@ export default function ApplicationsPage() {
                   </td>
                   <td className="px-4 py-3">
                     {item.profession}
-                    <div className="text-xs text-slate-400">{item.yearsOfExperience} yrs AI training</div>
+                    <div className="text-xs text-slate-400">{formatYearsOfAiTraining(item.yearsOfExperience)}</div>
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge status={item.status} />
