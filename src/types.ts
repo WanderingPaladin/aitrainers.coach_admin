@@ -40,6 +40,7 @@ export type Application = {
   ipLocation: string | null;
   applicant_stage: 'new_no_account' | 'has_accounts_no_time' | 'working_no_progress' | null;
   referral_source: string | null;
+  us_eligibility_confirmed: boolean;
   status: ApplicationStatus;
   createdAt: string;
   updatedAt: string;

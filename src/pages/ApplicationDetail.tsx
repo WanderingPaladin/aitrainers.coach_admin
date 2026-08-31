@@ -151,6 +151,10 @@ export default function ApplicationDetailPage() {
             }
           />
           <Field label="Where they found us" value={application.referral_source} />
+          <Field
+            label="U.S. eligibility"
+            value={application.us_eligibility_confirmed ? 'Confirmed' : 'Not confirmed'}
+          />
         </dl>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-6">
