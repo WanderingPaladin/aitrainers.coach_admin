@@ -143,3 +143,51 @@ export type FilterOptions = {
   states: string[];
   tags: string[];
 };
+
+export const JOB_SOURCE_TYPES = ['greenhouse', 'lever', 'ashby', 'jsonld', 'custom'] as const;
+export type JobSourceType = (typeof JOB_SOURCE_TYPES)[number];
+
+export type JobSource = {
+  id: string;
+  companyName: string;
+  companySlug: string;
+  companyLogoUrl: string | null;
+  sourceType: JobSourceType;
+  boardToken: string;
+  careersUrl: string;
+  enabled: boolean;
+  priority: number;
+  crawlFrequencyMinutes: number;
+  lastCrawledAt: string | null;
+  lastSuccessAt: string | null;
+  lastError: string | null;
+  createdAt: string;
+  updatedAt: string;
+  jobCount: number;
+  lastRun: {
+    status: string;
+    finishedAt: string | null;
+    jobsFetched: number;
+    errorMessage: string | null;
+  } | null;
+};
+
+export type AdminJob = {
+  id: string;
+  slug: string;
+  title: string;
+  companyName: string;
+  location: string | null;
+  remoteType: string | null;
+  employmentType: string | null;
+  category: string | null;
+  relevanceScore: number;
+  visibility: 'published' | 'review' | 'hidden';
+  isActive: boolean;
+  isDuplicate: boolean;
+  postedAt: string | null;
+  lastSeenAt: string;
+  applyUrl: string;
+  sourceType: JobSourceType;
+  sourceName: string;
+};

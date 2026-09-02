@@ -1,4 +1,4 @@
-import { CalendarDays, LayoutDashboard, Settings2, Users } from 'lucide-react';
+import { Briefcase, CalendarDays, LayoutDashboard, Rss, Settings2, Users } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import Brand from './Brand';
 import { useAuth } from './AuthProvider';
@@ -7,6 +7,8 @@ const links = [
   { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
   { to: '/admin/applications', label: 'Applications', icon: Users },
   { to: '/admin/calendar', label: 'Demo calls', icon: CalendarDays },
+  { to: '/admin/job-sources', label: 'Job sources', icon: Rss },
+  { to: '/admin/jobs', label: 'Jobs', icon: Briefcase },
   { to: '/admin/settings', label: 'Settings', icon: Settings2 },
 ];
 

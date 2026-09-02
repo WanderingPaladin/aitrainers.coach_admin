@@ -140,6 +140,69 @@ export function deleteAvailability(id: string) {
   return request<void>(`/v1/admin/availability/${id}`, { method: 'DELETE' });
 }
 
+export function listJobSources() {
+  return request<{ sources: import('../types').JobSource[]; identifierHelp: Record<string, string> }>(
+    '/v1/admin/job-sources',
+  );
+}
+
+export function createJobSource(body: {
+  companyName: string;
+  companySlug?: string;
+  companyLogoUrl?: string | null;
+  sourceType: import('../types').JobSourceType;
+  boardToken?: string;
+  careersUrl?: string;
+  enabled?: boolean;
+  priority?: number;
+}) {
+  return request<{ source: import('../types').JobSource }>('/v1/admin/job-sources', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export function patchJobSource(id: string, body: Record<string, unknown>) {
+  return request<{ source: import('../types').JobSource }>(`/v1/admin/job-sources/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
+}
+
+export function syncJobSource(id: string) {
+  return request<{
+    locked: boolean;
+    staleMarked: number;
+    results: Array<{
+      sourceId: string;
+      status: string;
+      jobsFetched: number;
+      jobsInserted: number;
+      jobsUpdated: number;
+      jobsRejected: number;
+      errorMessage: string | null;
+    }>;
+  }>(`/v1/admin/job-sources/${id}/sync`, { method: 'POST' });
+}
+
+export function listAdminJobs(params?: { q?: string; visibility?: string; page?: number }) {
+  const search = new URLSearchParams();
+  if (params?.q) search.set('q', params.q);
+  if (params?.visibility) search.set('visibility', params.visibility);
+  if (params?.page) search.set('page', String(params.page));
+  const query = search.toString();
+  return request<import('../types').ListResponse<import('../types').AdminJob> & { items: import('../types').AdminJob[] }>(
+    `/v1/admin/jobs${query ? `?${query}` : ''}`,
+  );
+}
+
+export function patchAdminJob(id: string, isActive: boolean) {
+  return request<{ job: { id: string; isActive: boolean; visibility: string; relevanceScore: number } }>(
+    `/v1/admin/jobs/${id}`,
+    { method: 'PATCH', body: JSON.stringify({ isActive }) },
+  );
+}
+
 export function downloadCsvFile(csv: string, filename: string) {
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);

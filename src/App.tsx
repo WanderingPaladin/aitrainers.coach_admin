@@ -5,6 +5,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { ToastProvider } from './components/Toast';
 import ApplicationsPage from './pages/ApplicationsPage';
 import CalendarPage from './pages/CalendarPage';
+import JobSourcesPage from './pages/JobSourcesPage';
+import JobsPage from './pages/JobsPage';
 import LoginPage from './pages/LoginPage';
 import OverviewPage from './pages/OverviewPage';
 import SettingsPage from './pages/SettingsPage';
@@ -22,6 +24,8 @@ export default function App() {
                 <Route path="applications" element={<ApplicationsPage />} />
                 <Route path="applications/:id" element={<ApplicationsPage />} />
                 <Route path="calendar" element={<CalendarPage />} />
+                <Route path="job-sources" element={<JobSourcesPage />} />
+                <Route path="jobs" element={<JobsPage />} />
                 <Route path="settings" element={<SettingsPage />} />
               </Route>
               <Route path="/" element={<Navigate to="/admin" replace />} />
