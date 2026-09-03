@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { createJobSource, listJobSources, patchJobSource, syncJobSource } from '../lib/api';
+import { createJobSource, discoverJobSources, listJobSources, patchJobSource, syncJobSource } from '../lib/api';
 import { ApiError } from '../lib/http';
 import type { JobSource, JobSourceType } from '../types';
 import { useToast } from '../components/Toast';
@@ -21,7 +21,7 @@ const helpFallback: Record<string, string> = {
   lever: 'Site identifier from jobs.lever.co/{site}',
   ashby: 'Board name from jobs.ashbyhq.com/{boardName}',
   jsonld: 'Leave the board token empty and set the public careers URL',
-  custom: 'Registered custom adapter key',
+      custom: 'Registered custom adapter key: micro1 or mercor',
 };
 
 export default function JobSourcesPage() {
@@ -31,6 +31,7 @@ export default function JobSourcesPage() {
   const [draft, setDraft] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [discovering, setDiscovering] = useState(false);
 
   function reload() {
     return listJobSources()
@@ -45,16 +46,37 @@ export default function JobSourcesPage() {
     void reload();
   }, []);
 
+  async function runDiscover() {
+    setDiscovering(true);
+    try {
+      const result = await discoverJobSources();
+      push(
+        `Found ${result.discovery.boardsFound} ATS boards, saved ${result.discovery.sourcesCreated} sources, reopened ${result.discovery.seedOpportunitiesReopened ?? 0} curated listings.`,
+        'success',
+      );
+      await reload();
+    } catch (err: unknown) {
+      push(err instanceof ApiError ? err.message : 'Discovery failed', 'error');
+    } finally {
+      setDiscovering(false);
+    }
+  }
+
   return (
     <div className="page">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="page-title">Job sources</h1>
-          <p className="page-copy">Public employer ATS feeds used by the /opportunities board. Do not add marketplace scrapers.</p>
+          <p className="page-copy">Public ATS boards plus micro1 and Mercor talent catalogs. Staff career boards for those brands are not collected.</p>
         </div>
-        <Link to="/admin/jobs" className="btn">
-          View collected jobs
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className="btn" disabled={discovering} onClick={() => void runDiscover()}>
+            {discovering ? 'Searching…' : 'Search Google for boards'}
+          </button>
+          <Link to="/admin/jobs" className="btn">
+            View collected jobs
+          </Link>
+        </div>
       </div>
 
       <section className="card mt-5 overflow-hidden">

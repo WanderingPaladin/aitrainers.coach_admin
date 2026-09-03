@@ -169,6 +169,22 @@ export function patchJobSource(id: string, body: Record<string, unknown>) {
   });
 }
 
+export function discoverJobSources() {
+  return request<{
+    discovery: {
+      queries: number;
+      urlsSeen: number;
+      boardsFound: number;
+      sourcesCreated: number;
+      sourcesUpdated: number;
+      sourcesSkipped: number;
+      seedOpportunitiesClosed: number;
+      seedOpportunitiesReopened?: number;
+    };
+    sync: { locked: boolean; staleMarked: number; results: unknown[] };
+  }>('/v1/admin/job-sources/discover', { method: 'POST' });
+}
+
 export function syncJobSource(id: string) {
   return request<{
     locked: boolean;
