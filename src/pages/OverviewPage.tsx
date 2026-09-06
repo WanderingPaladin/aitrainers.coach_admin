@@ -46,9 +46,14 @@ export default function OverviewPage() {
             Review applicants, move candidates through the pipeline, and keep follow-ups organized.
           </p>
         </div>
-        <Link to="/admin/applications" className="btn btn-primary">
-          View applications
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/admin/analytics" className="btn">
+            Analytics
+          </Link>
+          <Link to="/admin/applications" className="btn btn-primary">
+            View applications
+          </Link>
+        </div>
       </div>
 
       <div className="metric-grid mt-6">

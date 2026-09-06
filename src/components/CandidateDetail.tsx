@@ -1,15 +1,18 @@
 import { ChevronLeft, ChevronRight, Copy, ExternalLink, Github, Linkedin, Mail, Phone } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { addNote, getApplication, patchApplication } from '../lib/api';
+import { addNote, getApplication, patchApplication, patchIntroCallAttendance } from '../lib/api';
 import { ApiError } from '../lib/http';
-import { formatDateTime, initials, PIPELINE_LABELS, SITUATION_LABELS } from '../lib/labels';
+import { ATTENDANCE_LABELS, formatDateTime, formatIpAddress, formatIpPlace, initials, PIPELINE_LABELS, SITUATION_LABELS, sourceLabel } from '../lib/labels';
 import { PIPELINE_STAGES, type Application, type PipelineStage } from '../types';
 import ActivityTimeline from './ActivityTimeline';
 import AdminNotes from './AdminNotes';
 import ApplicationStageBadge from './ApplicationStageBadge';
+import CandidateJourney from './CandidateJourney';
 import CandidateSnapshot from './CandidateSnapshot';
 import ConfirmDialog from './ConfirmDialog';
+import JourneyStageBadge from './JourneyStageBadge';
+import PlatformProgressPanel from './PlatformProgressPanel';
 import { useToast } from './Toast';
 
 export default function CandidateDetail({
@@ -54,6 +57,23 @@ export default function CandidateDetail({
     } catch (err) {
       setApplication(previous);
       push(err instanceof ApiError ? err.message : 'Update failed', 'error');
+    }
+  }
+
+  async function markAttendance(bookingId: string, attendance: 'attended' | 'no_show' | 'completed') {
+    try {
+      await patchIntroCallAttendance(bookingId, attendance);
+      const fresh = await getApplication(id);
+      setApplication(fresh.application);
+      push(
+        attendance === 'attended'
+          ? 'Intro call marked attended'
+          : attendance === 'no_show'
+            ? 'Intro call marked no-show'
+            : 'Intro call marked completed',
+      );
+    } catch (err) {
+      push(err instanceof ApiError ? err.message : 'Could not update intro call', 'error');
     }
   }
 
@@ -137,6 +157,7 @@ export default function CandidateDetail({
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
+        <JourneyStageBadge stage={application.journeyStage} />
         <ApplicationStageBadge stage={application.pipelineStage} />
         <span className="text-[13px] text-[var(--color-muted)]">Submitted {formatDateTime(application.submittedAt)}</span>
       </div>
@@ -149,12 +170,79 @@ export default function CandidateDetail({
             { label: 'Primary specialization', value: application.profession },
             { label: 'Location', value: application.location || [application.city, application.state].filter(Boolean).join(', ') || '—' },
             { label: 'Timezone', value: application.timezone },
+            { label: 'Source', value: sourceLabel(application.firstSource) },
+            { label: 'IP address', value: formatIpAddress(application) },
+            { label: 'IP location', value: formatIpPlace(application) },
+            { label: 'Last activity', value: formatDateTime(application.lastActivityAt ?? application.updatedAt) },
           ]}
         />
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="grid gap-4">
+          <CandidateJourney events={application.journeyEvents ?? []} source={application.firstSource} />
+
+          <section className="card p-4">
+            <h2 className="m-0 text-[15px] font-bold">Acquisition</h2>
+            <p className="mt-1 mb-0 text-[12px] text-[var(--color-muted)]">
+              First-touch source is preserved. Later visits do not overwrite it.
+            </p>
+            <dl className="mt-3 mb-0 grid gap-2 text-[13px]">
+              <div className="flex flex-wrap justify-between gap-2">
+                <dt className="text-[var(--color-muted)]">Source</dt>
+                <dd className="m-0 font-semibold">{sourceLabel(application.firstSource)}</dd>
+              </div>
+              <div className="flex flex-wrap justify-between gap-2">
+                <dt className="text-[var(--color-muted)]">Landing page</dt>
+                <dd className="m-0 break-all">{application.visitor?.landingPage || '—'}</dd>
+              </div>
+              <div className="flex flex-wrap justify-between gap-2">
+                <dt className="text-[var(--color-muted)]">Referrer</dt>
+                <dd className="m-0 break-all">{application.visitor?.referrer || '—'}</dd>
+              </div>
+              <div className="flex flex-wrap justify-between gap-2">
+                <dt className="text-[var(--color-muted)]">UTM</dt>
+                <dd className="m-0 text-right">
+                  {[
+                    application.utmSource || application.visitor?.utmSource,
+                    application.utmMedium || application.visitor?.utmMedium,
+                    application.utmCampaign || application.visitor?.utmCampaign,
+                  ]
+                    .filter(Boolean)
+                    .join(' / ') || '—'}
+                </dd>
+              </div>
+              {(application.utmContent || application.visitor?.utmContent || application.utmTerm || application.visitor?.utmTerm) ? (
+                <div className="flex flex-wrap justify-between gap-2">
+                  <dt className="text-[var(--color-muted)]">Content / term</dt>
+                  <dd className="m-0">
+                    {[application.utmContent || application.visitor?.utmContent, application.utmTerm || application.visitor?.utmTerm]
+                      .filter(Boolean)
+                      .join(' / ')}
+                  </dd>
+                </div>
+              ) : null}
+              <div className="flex flex-wrap justify-between gap-2">
+                <dt className="text-[var(--color-muted)]">First seen</dt>
+                <dd className="m-0">{formatDateTime(application.visitor?.firstSeenAt)}</dd>
+              </div>
+              <div className="flex flex-wrap justify-between gap-2">
+                <dt className="text-[var(--color-muted)]">IP address</dt>
+                <dd className="m-0 font-semibold">{formatIpAddress(application)}</dd>
+              </div>
+              <div className="flex flex-wrap justify-between gap-2">
+                <dt className="text-[var(--color-muted)]">IP location</dt>
+                <dd className="m-0">{formatIpPlace(application)}</dd>
+              </div>
+              {application.referral_source ? (
+                <div className="flex flex-wrap justify-between gap-2">
+                  <dt className="text-[var(--color-muted)]">Form referral</dt>
+                  <dd className="m-0">{application.referral_source}</dd>
+                </div>
+              ) : null}
+            </dl>
+          </section>
+
           <section className="card p-4">
             <h2 className="m-0 text-[15px] font-bold">Contact</h2>
             <ul className="mt-3 mb-0 grid gap-2 p-0 list-none">
@@ -345,16 +433,46 @@ export default function CandidateDetail({
           {application.bookings?.length ? (
             <section className="card p-4">
               <h2 className="m-0 text-[15px] font-bold">Intro calls</h2>
+              <p className="mt-1 mb-0 text-[12px] text-[var(--color-muted)]">
+                AI Trainers intro call attendance, not an external platform interview.
+              </p>
               <ul className="mt-3 mb-0 grid gap-2 p-0 list-none">
                 {application.bookings.map((booking) => (
                   <li key={booking.id}>
                     <strong>{formatDateTime(booking.startsAt)}</strong>
-                    <div className="text-[13px] text-[var(--color-muted)]">{booking.status}</div>
+                    <div className="text-[13px] text-[var(--color-muted)]">
+                      {ATTENDANCE_LABELS[booking.attendance ?? (booking.status === 'cancelled' ? 'cancelled' : 'scheduled')]}
+                    </div>
+                    {booking.status === 'confirmed' ? (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <button type="button" className="btn" onClick={() => void markAttendance(booking.id, 'attended')}>
+                          Mark attended
+                        </button>
+                        <button type="button" className="btn" onClick={() => void markAttendance(booking.id, 'no_show')}>
+                          Mark no-show
+                        </button>
+                        <button type="button" className="btn" onClick={() => void markAttendance(booking.id, 'completed')}>
+                          Mark completed
+                        </button>
+                      </div>
+                    ) : null}
                   </li>
                 ))}
               </ul>
             </section>
           ) : null}
+
+          <PlatformProgressPanel
+            applicationId={application.id}
+            items={application.platformProgress ?? []}
+            onUpdated={(next, platforms, events) =>
+              setApplication({
+                ...next,
+                platformProgress: platforms,
+                journeyEvents: events ?? next.journeyEvents,
+              })
+            }
+          />
         </aside>
       </div>
 

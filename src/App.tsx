@@ -4,7 +4,9 @@ import { AuthProvider } from './components/AuthProvider';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ToastProvider } from './components/Toast';
 import ApplicationsPage from './pages/ApplicationsPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 import CalendarPage from './pages/CalendarPage';
+import FeedbackPage from './pages/FeedbackPage';
 import JobSourcesPage from './pages/JobSourcesPage';
 import JobsPage from './pages/JobsPage';
 import LoginPage from './pages/LoginPage';
@@ -26,6 +28,8 @@ export default function App() {
                 <Route path="calendar" element={<CalendarPage />} />
                 <Route path="job-sources" element={<JobSourcesPage />} />
                 <Route path="jobs" element={<JobsPage />} />
+                <Route path="feedback" element={<FeedbackPage />} />
+                <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="settings" element={<SettingsPage />} />
               </Route>
               <Route path="/" element={<Navigate to="/admin" replace />} />

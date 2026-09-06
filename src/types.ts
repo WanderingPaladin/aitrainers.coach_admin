@@ -29,6 +29,118 @@ export type ApplicationActivity = {
   createdAt: string;
 };
 
+export type IntroCallAttendance =
+  | 'scheduled'
+  | 'rescheduled'
+  | 'cancelled'
+  | 'attended'
+  | 'no_show'
+  | 'completed';
+
+export type JourneyStage =
+  | 'visitor'
+  | 'application_started'
+  | 'application_submitted'
+  | 'intro_call_booked'
+  | 'intro_call_attended'
+  | 'coaching_started'
+  | 'platform_applied'
+  | 'platform_assessment'
+  | 'platform_interview'
+  | 'platform_interview_passed'
+  | 'project_started'
+  | 'inactive';
+
+export type PlatformProgressStatus =
+  | 'interested'
+  | 'applied'
+  | 'assessment_invited'
+  | 'assessment_started'
+  | 'assessment_completed'
+  | 'interview_invited'
+  | 'interview_scheduled'
+  | 'interview_completed'
+  | 'passed'
+  | 'rejected'
+  | 'waitlisted'
+  | 'project_received'
+  | 'working'
+  | 'inactive';
+
+export type JourneyEvent = {
+  id: string;
+  eventType: string;
+  platform: string | null;
+  opportunityId: string | null;
+  metadata: unknown;
+  pagePath: string | null;
+  createdBy: string;
+  createdAt: string;
+};
+
+export type PlatformProgress = {
+  id: string;
+  platform: string;
+  opportunityId: string | null;
+  opportunityTitle: string | null;
+  status: PlatformProgressStatus | string;
+  appliedAt: string | null;
+  assessmentAt: string | null;
+  interviewAt: string | null;
+  resultAt: string | null;
+  projectStartedAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type FunnelStage = {
+  key: string;
+  label: string;
+  count: number;
+};
+
+export type FunnelConversion = {
+  from: string;
+  to: string;
+  fromLabel: string;
+  toLabel: string;
+  fromCount: number;
+  toCount: number;
+  dropped: number;
+  conversion: number | null;
+};
+
+export type SourceRow = {
+  source: string;
+  label: string;
+  visitors: number;
+  applications: number;
+  bookings: number;
+  attended: number;
+  interviews: number;
+  passed: number;
+  projects: number;
+  visitorToApplication: number | null;
+  applicationToBooking: number | null;
+  interviewToPass: number | null;
+};
+
+export type FunnelResponse = {
+  range: {
+    preset: string;
+    from: string | null;
+    to: string;
+    label: string;
+    cohort: string;
+  };
+  trackingStartedAt: string | null;
+  stages: FunnelStage[];
+  conversions: FunnelConversion[];
+  biggestDropOff: FunnelConversion | null;
+  sources: SourceRow[];
+};
+
 export type Booking = {
   id: string;
   applicationId: string;
@@ -38,6 +150,7 @@ export type Booking = {
   meetingUrl: string | null;
   createdAt: string;
   cancelledAt: string | null;
+  attendance?: IntroCallAttendance;
   application?: {
     id: string;
     firstName: string;
@@ -78,6 +191,37 @@ export type Application = {
   tags: string[];
   nextActionAt: string | null;
   demoScheduledAt: string | null;
+  ipAddress?: string | null;
+  ipLocation?: string | null;
+  visitorId?: string | null;
+  journeyStage?: JourneyStage;
+  firstSource?: string | null;
+  utmSource?: string | null;
+  utmMedium?: string | null;
+  utmCampaign?: string | null;
+  utmContent?: string | null;
+  utmTerm?: string | null;
+  lastActivityAt?: string | null;
+  introCall?: {
+    id: string;
+    status: string;
+    attendance: IntroCallAttendance | string;
+    startsAt: string;
+  } | null;
+  platformProgressSummary?: string | null;
+  visitor?: {
+    firstSource: string;
+    firstSeenAt: string;
+    landingPage: string;
+    referrer: string | null;
+    utmSource: string | null;
+    utmMedium: string | null;
+    utmCampaign: string | null;
+    utmContent: string | null;
+    utmTerm: string | null;
+  } | null;
+  journeyEvents?: JourneyEvent[];
+  platformProgress?: PlatformProgress[];
   resume: { fileName: string; contentType: string } | null;
   createdAt: string;
   updatedAt: string;
@@ -190,4 +334,30 @@ export type AdminJob = {
   applyUrl: string;
   sourceType: JobSourceType;
   sourceName: string;
+};
+
+export const FEEDBACK_STATUSES = ['new', 'reviewed', 'planned', 'resolved', 'archived'] as const;
+export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number];
+
+export const FEEDBACK_CATEGORIES = ['confusing', 'improvement', 'problem', 'general', 'question'] as const;
+export type FeedbackCategory = (typeof FEEDBACK_CATEGORIES)[number];
+
+export type SiteFeedback = {
+  id: string;
+  category: FeedbackCategory | string;
+  subcategory: string | null;
+  message: string;
+  rating: number | null;
+  pagePath: string;
+  pageUrl: string;
+  userId: string | null;
+  email: string | null;
+  browser: string | null;
+  deviceType: string | null;
+  screenWidth: number | null;
+  screenHeight: number | null;
+  referrer: string | null;
+  status: FeedbackStatus;
+  createdAt: string;
+  updatedAt: string;
 };

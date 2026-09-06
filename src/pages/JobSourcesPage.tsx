@@ -52,7 +52,7 @@ export default function JobSourcesPage() {
       const result = await discoverJobSources();
       push(
         `Found ${result.discovery.boardsFound} ATS boards, saved ${result.discovery.sourcesCreated} sources, reopened ${result.discovery.seedOpportunitiesReopened ?? 0} curated listings.`,
-        'success',
+        'ok',
       );
       await reload();
     } catch (err: unknown) {

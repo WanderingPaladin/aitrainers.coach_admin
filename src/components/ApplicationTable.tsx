@@ -1,8 +1,8 @@
 import { MoreHorizontal } from 'lucide-react';
-import { initials, relativeTime } from '../lib/labels';
+import { ATTENDANCE_LABELS, formatIpAddress, initials, relativeTime, sourceLabel } from '../lib/labels';
 import type { Application } from '../types';
-import ApplicationStageBadge from './ApplicationStageBadge';
 import CandidateSituationBadge from './CandidateSituationBadge';
+import JourneyStageBadge from './JourneyStageBadge';
 
 type Props = {
   items: Application[];
@@ -41,12 +41,14 @@ export default function ApplicationTable({
               </th>
               <th>Applicant</th>
               <th>Profession</th>
-              <th>Situation</th>
-              <th>Experience</th>
               <th className="hide-lg">Location</th>
-              <th>Submitted</th>
-              <th>Stage</th>
-              <th className="hide-md">Assignee</th>
+              <th className="hide-lg">IP</th>
+              <th>Source</th>
+              <th>Current stage</th>
+              <th>Applied</th>
+              <th>Intro call</th>
+              <th className="hide-md">Platform progress</th>
+              <th className="hide-md">Last activity</th>
               <th><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
@@ -75,21 +77,23 @@ export default function ApplicationTable({
                 <td>
                   {item.profession}
                 </td>
-                <td>
-                  <CandidateSituationBadge stage={item.applicant_stage} label={item.candidateSituation} />
-                </td>
-                <td>{item.experienceLabel}</td>
                 <td className="hide-lg">
-                  <div>
-                    {item.location || [item.city, item.state].filter(Boolean).join(', ') || '—'}
-                    <div className="text-[12px] text-[var(--color-muted)]">{item.timezone}</div>
-                  </div>
+                  {item.location || [item.city, item.state].filter(Boolean).join(', ') || '—'}
+                </td>
+                <td className="hide-lg">{formatIpAddress(item)}</td>
+                <td>{sourceLabel(item.firstSource)}</td>
+                <td>
+                  <JourneyStageBadge stage={item.journeyStage} />
                 </td>
                 <td>{relativeTime(item.submittedAt)}</td>
                 <td>
-                  <ApplicationStageBadge stage={item.pipelineStage} />
+                  {item.introCall
+                    ? ATTENDANCE_LABELS[item.introCall.attendance as keyof typeof ATTENDANCE_LABELS] ??
+                      item.introCall.attendance
+                    : '—'}
                 </td>
-                <td className="hide-md">{item.assignee ?? '—'}</td>
+                <td className="hide-md">{item.platformProgressSummary ?? '—'}</td>
+                <td className="hide-md">{relativeTime(item.lastActivityAt ?? item.updatedAt)}</td>
                 <td onClick={(event) => event.stopPropagation()}>
                   <details className="relative">
                     <summary className="btn btn-ghost list-none px-2" aria-label={`Actions for ${item.fullName}`}>
@@ -132,11 +136,11 @@ export default function ApplicationTable({
                   <strong className="block truncate">{item.fullName}</strong>
                   <span className="block truncate text-[12.5px] text-[var(--color-muted)]">{item.email}</span>
                   <span className="mt-2 flex flex-wrap gap-2">
-                    <ApplicationStageBadge stage={item.pipelineStage} />
+                    <JourneyStageBadge stage={item.journeyStage} />
                     <CandidateSituationBadge stage={item.applicant_stage} label={item.candidateSituation} />
                   </span>
                   <span className="mt-2 block text-[13px] text-[var(--color-muted)]">
-                    {item.profession} · {item.experienceLabel} · {relativeTime(item.submittedAt)}
+                    {item.profession} · {sourceLabel(item.firstSource)} · {formatIpAddress(item)} · {relativeTime(item.submittedAt)}
                   </span>
                 </span>
               </button>

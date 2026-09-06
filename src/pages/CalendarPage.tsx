@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { cancelBooking, listBookings } from '../lib/api';
+import { cancelBooking, listBookings, patchIntroCallAttendance } from '../lib/api';
 import { ApiError } from '../lib/http';
-import { formatDateTime } from '../lib/labels';
-import type { Booking } from '../types';
+import { ATTENDANCE_LABELS, formatDateTime } from '../lib/labels';
+import type { Booking, IntroCallAttendance } from '../types';
 import { useToast } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 
@@ -17,6 +17,16 @@ export default function CalendarPage() {
     return listBookings({ pageSize: 100, status: 'confirmed' })
       .then((result) => setItems(result.items))
       .catch((err: unknown) => setError(err instanceof ApiError ? err.message : 'Could not load demo calls.'));
+  }
+
+  async function markAttendance(bookingId: string, attendance: IntroCallAttendance) {
+    try {
+      await patchIntroCallAttendance(bookingId, attendance);
+      push(attendance === 'attended' ? 'Marked attended' : attendance === 'no_show' ? 'Marked no-show' : 'Attendance updated');
+      await reload();
+    } catch (err) {
+      push(err instanceof ApiError ? err.message : 'Could not update attendance', 'error');
+    }
   }
 
   useEffect(() => {
@@ -42,7 +52,10 @@ export default function CalendarPage() {
               <li key={booking.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--color-line)] p-3">
                 <div>
                   <strong>{booking.application?.fullName ?? 'Applicant'}</strong>
-                  <div className="text-[13px] text-[var(--color-muted)]">{formatDateTime(booking.startsAt)}</div>
+                  <div className="text-[13px] text-[var(--color-muted)]">
+                    {formatDateTime(booking.startsAt)}
+                    {booking.attendance ? ` · ${ATTENDANCE_LABELS[booking.attendance]}` : ''}
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   {booking.application ? (
@@ -70,13 +83,28 @@ export default function CalendarPage() {
               <li key={booking.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <span>
                   <strong>{booking.application?.fullName ?? 'Applicant'}</strong>
-                  <span className="ml-2 text-[13px] text-[var(--color-muted)]">{formatDateTime(booking.startsAt)}</span>
+                  <span className="ml-2 text-[13px] text-[var(--color-muted)]">
+                    {formatDateTime(booking.startsAt)}
+                    {booking.attendance ? ` · ${ATTENDANCE_LABELS[booking.attendance]}` : ''}
+                  </span>
                 </span>
-                {booking.application ? (
-                  <Link className="btn" to={`/admin/applications/${booking.application.id}`}>
-                    Record outcome
-                  </Link>
-                ) : null}
+                <span className="flex flex-wrap gap-2">
+                  {booking.attendance !== 'attended' && booking.attendance !== 'completed' ? (
+                    <>
+                      <button type="button" className="btn" onClick={() => void markAttendance(booking.id, 'attended')}>
+                        Attended
+                      </button>
+                      <button type="button" className="btn" onClick={() => void markAttendance(booking.id, 'no_show')}>
+                        No-show
+                      </button>
+                    </>
+                  ) : null}
+                  {booking.application ? (
+                    <Link className="btn" to={`/admin/applications/${booking.application.id}`}>
+                      Open
+                    </Link>
+                  ) : null}
+                </span>
               </li>
             ))}
           </ul>

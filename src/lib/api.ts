@@ -219,6 +219,63 @@ export function patchAdminJob(id: string, isActive: boolean) {
   );
 }
 
+export function listFeedback(params?: { status?: string; category?: string; q?: string; page?: number }) {
+  const search = new URLSearchParams();
+  if (params?.status) search.set('status', params.status);
+  if (params?.category) search.set('category', params.category);
+  if (params?.q) search.set('q', params.q);
+  if (params?.page) search.set('page', String(params.page));
+  const query = search.toString();
+  return request<import('../types').ListResponse<import('../types').SiteFeedback> & { newCount: number }>(
+    `/v1/admin/feedback${query ? `?${query}` : ''}`,
+  );
+}
+
+export function patchFeedback(id: string, status: import('../types').FeedbackStatus) {
+  return request<{ feedback: import('../types').SiteFeedback }>(`/v1/admin/feedback/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+}
+
+export function getFunnelAnalytics(params: { range?: string; from?: string; to?: string }) {
+  const search = new URLSearchParams();
+  if (params.range) search.set('range', params.range);
+  if (params.from) search.set('from', params.from);
+  if (params.to) search.set('to', params.to);
+  const query = search.toString();
+  return request<import('../types').FunnelResponse>(`/v1/admin/analytics/funnel${query ? `?${query}` : ''}`);
+}
+
+export function patchIntroCallAttendance(id: string, attendance: import('../types').IntroCallAttendance) {
+  return request<{ booking: Booking }>(`/v1/admin/bookings/${id}/attendance`, {
+    method: 'PATCH',
+    body: JSON.stringify({ attendance }),
+  });
+}
+
+export function upsertPlatformProgress(
+  applicationId: string,
+  body: {
+    platform: string;
+    opportunityId?: string;
+    opportunityTitle?: string;
+    status: import('../types').PlatformProgressStatus;
+    occurredAt?: string;
+    notes?: string;
+  },
+) {
+  return request<{
+    platform: import('../types').PlatformProgress;
+    platforms: import('../types').PlatformProgress[];
+    events: import('../types').JourneyEvent[];
+    application: Application;
+  }>(`/v1/admin/applications/${applicationId}/platforms`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
 export function downloadCsvFile(csv: string, filename: string) {
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
