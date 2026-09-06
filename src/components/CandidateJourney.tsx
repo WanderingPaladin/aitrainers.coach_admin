@@ -3,6 +3,12 @@ import type { JourneyEvent } from '../types';
 
 function eventCopy(event: JourneyEvent): string {
   const base = JOURNEY_EVENT_LABELS[event.eventType] ?? event.eventType.replace(/_/g, ' ');
+  if (event.eventType === 'feedback_submitted') {
+    const category = typeof event.metadata === 'object' && event.metadata && 'category' in event.metadata
+      ? String((event.metadata as { category?: string }).category).replace(/_/g, ' ')
+      : '';
+    return category ? `${base}: ${category}` : base;
+  }
   if (event.platform) {
     return `${base}: ${event.platform}`;
   }

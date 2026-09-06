@@ -231,6 +231,10 @@ export function listFeedback(params?: { status?: string; category?: string; q?: 
   );
 }
 
+export function getFeedbackSummary() {
+  return request<import('../types').FeedbackSummary>('/v1/admin/feedback/summary');
+}
+
 export function patchFeedback(id: string, status: import('../types').FeedbackStatus) {
   return request<{ feedback: import('../types').SiteFeedback }>(`/v1/admin/feedback/${id}`, {
     method: 'PATCH',

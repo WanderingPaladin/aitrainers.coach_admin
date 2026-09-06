@@ -336,7 +336,7 @@ export type AdminJob = {
   sourceName: string;
 };
 
-export const FEEDBACK_STATUSES = ['new', 'reviewed', 'planned', 'resolved', 'archived'] as const;
+export const FEEDBACK_STATUSES = ['new', 'reviewed', 'planned', 'resolved', 'archived', 'spam'] as const;
 export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number];
 
 export const FEEDBACK_CATEGORIES = ['confusing', 'improvement', 'problem', 'general', 'question'] as const;
@@ -357,7 +357,25 @@ export type SiteFeedback = {
   screenWidth: number | null;
   screenHeight: number | null;
   referrer: string | null;
+  visitorId?: string | null;
+  sessionId?: string | null;
+  applicationId?: string | null;
+  firstSource?: string | null;
+  journeyStage?: string | null;
+  journeyLabel?: string | null;
+  candidateName?: string | null;
   status: FeedbackStatus;
   createdAt: string;
   updatedAt: string;
+};
+
+export type FeedbackSummary = {
+  total: number;
+  newCount: number;
+  confusingCount: number;
+  problemCount: number;
+  positiveRatings: number;
+  categoryCounts: Record<string, number>;
+  areas: Array<{ label: string; count: number }>;
+  similar: Array<{ category: string; subcategory: string | null; pagePath: string; count: number; label: string }>;
 };

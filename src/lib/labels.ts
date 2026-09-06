@@ -95,6 +95,7 @@ export const JOURNEY_EVENT_LABELS: Record<string, string> = {
   opportunity_viewed: 'Viewed an opportunity',
   opportunity_saved: 'Saved an opportunity',
   opportunity_external_clicked: 'Opened an external opportunity',
+  feedback_submitted: 'Submitted feedback',
   platform_application_added: 'Applied to a platform',
   platform_assessment_invited: 'Platform assessment invited',
   platform_assessment_started: 'Platform assessment started',
