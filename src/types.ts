@@ -345,7 +345,9 @@ export type FeedbackCategory = (typeof FEEDBACK_CATEGORIES)[number];
 export type SiteFeedback = {
   id: string;
   category: FeedbackCategory | string;
+  categoryLabel?: string;
   subcategory: string | null;
+  subcategoryLabel?: string | null;
   message: string;
   rating: number | null;
   pagePath: string;
@@ -360,10 +362,17 @@ export type SiteFeedback = {
   visitorId?: string | null;
   sessionId?: string | null;
   applicationId?: string | null;
+  conversationId?: string | null;
+  conversationStatus?: string | null;
+  lastTeamReplyAt?: string | null;
+  lastTeamReplyPreview?: string | null;
+  unreadForVisitor?: boolean;
   firstSource?: string | null;
   journeyStage?: string | null;
   journeyLabel?: string | null;
   candidateName?: string | null;
+  replyAvailable?: boolean;
+  replyUnavailableReason?: string | null;
   status: FeedbackStatus;
   createdAt: string;
   updatedAt: string;
@@ -379,3 +388,71 @@ export type FeedbackSummary = {
   areas: Array<{ label: string; count: number }>;
   similar: Array<{ category: string; subcategory: string | null; pagePath: string; count: number; label: string }>;
 };
+
+export const CHAT_STATUSES = ['open', 'waiting_for_team', 'waiting_for_user', 'resolved', 'closed'] as const;
+export type ChatStatus = (typeof CHAT_STATUSES)[number];
+
+export type ChatMessage = {
+  id: string;
+  conversationId: string;
+  senderType: 'visitor' | 'candidate' | 'team' | 'system';
+  senderLabel: string;
+  body: string;
+  messageType?: string;
+  feedbackId?: string | null;
+  feedback?: {
+    id: string;
+    category: string;
+    categoryLabel: string;
+    subcategory: string | null;
+    subcategoryLabel: string | null;
+    message: string;
+    rating: number | null;
+    pagePath: string;
+    createdAt: string;
+  } | null;
+  createdAt: string;
+  readAt: string | null;
+};
+
+export type ChatConversation = {
+  id: string;
+  status: ChatStatus;
+  topic: string | null;
+  topicLabel: string | null;
+  displayName: string;
+  startedFromPage: string | null;
+  firstSource: string | null;
+  currentFunnelStage: string | null;
+  lastMessageAt: string;
+  lastMessage: ChatMessage | null;
+  unreadCount: number;
+  applicationId: string | null;
+  contactEmail: string | null;
+  context?: {
+    displayName: string;
+    profession: string | null;
+    location: string | null;
+    email: string | null;
+    source: string | null;
+    journeyStage: string;
+    journeyLabel: string;
+    applicationId: string | null;
+    applicationCreatedAt: string | null;
+    introCall: { id: string; startsAt: string; attendance: string } | null;
+    startedFromPage: string | null;
+    opportunityTitle: string | null;
+    opportunityPlatform: string | null;
+    feedback?: {
+      id: string;
+      category: string;
+      categoryLabel: string;
+      subcategory: string | null;
+      subcategoryLabel: string | null;
+      message: string;
+      submittedAt?: string;
+      createdAt: string;
+    } | null;
+  };
+};
+

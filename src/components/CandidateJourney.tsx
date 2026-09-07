@@ -3,10 +3,20 @@ import type { JourneyEvent } from '../types';
 
 function eventCopy(event: JourneyEvent): string {
   const base = JOURNEY_EVENT_LABELS[event.eventType] ?? event.eventType.replace(/_/g, ' ');
+  if (event.eventType === 'chat_started') {
+    const topic = typeof event.metadata === 'object' && event.metadata && 'topic' in event.metadata
+      ? String((event.metadata as { topic?: string }).topic || '').replace(/_/g, ' ')
+      : '';
+    return topic ? `${base}. Topic: ${topic}` : base;
+  }
   if (event.eventType === 'feedback_submitted') {
     const category = typeof event.metadata === 'object' && event.metadata && 'category' in event.metadata
       ? String((event.metadata as { category?: string }).category).replace(/_/g, ' ')
       : '';
+    const subcategory = typeof event.metadata === 'object' && event.metadata && 'subcategory' in event.metadata
+      ? String((event.metadata as { subcategory?: string }).subcategory || '').replace(/_/g, ' ')
+      : '';
+    if (subcategory && category) return `${base}: ${subcategory}`;
     return category ? `${base}: ${category}` : base;
   }
   if (event.platform) {
@@ -28,7 +38,7 @@ export default function CandidateJourney({
   events: JourneyEvent[];
   source?: string | null;
 }) {
-  const items = events.filter((event) => event.eventType !== 'page_view');
+  const items = events.filter((event) => event.eventType !== 'page_view' && event.eventType !== 'chat_opened');
   if (items.length === 0) {
     return (
       <section className="card p-4">

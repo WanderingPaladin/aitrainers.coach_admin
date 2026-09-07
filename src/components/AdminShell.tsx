@@ -1,6 +1,8 @@
 import { Menu } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { getChatUnread } from '../lib/api';
+import { getAdminChatSocket } from '../lib/chat-socket';
 import AdminSidebar from './AdminSidebar';
 import Brand from './Brand';
 import { useAuth } from './AuthProvider';
@@ -9,6 +11,21 @@ export default function AdminShell() {
   const { ready, admin } = useAuth();
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const [inboxUnread, setInboxUnread] = useState(0);
+
+  useEffect(() => {
+    if (!admin) return;
+    const refresh = () => {
+      void getChatUnread()
+        .then((result) => setInboxUnread(result.unreadCount))
+        .catch(() => {});
+    };
+    refresh();
+    void getAdminChatSocket().then((socket) => {
+      socket?.on('inbox:update', refresh);
+      socket?.on('message:new', refresh);
+    });
+  }, [admin]);
 
   if (!ready) {
     return (
@@ -30,11 +47,11 @@ export default function AdminShell() {
           <Menu size={18} />
         </button>
       </div>
-      <AdminSidebar />
+      <AdminSidebar inboxUnread={inboxUnread} />
       {open ? (
         <div className="drawer-backdrop" onClick={() => setOpen(false)}>
           <div className="drawer drawer-left" onClick={(event) => event.stopPropagation()}>
-            <AdminSidebar onNavigate={() => setOpen(false)} />
+            <AdminSidebar inboxUnread={inboxUnread} onNavigate={() => setOpen(false)} />
           </div>
         </div>
       ) : null}

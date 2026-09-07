@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getFeedbackSummary, listFeedback, patchFeedback } from '../lib/api';
+import { useNavigate } from 'react-router-dom';
+import { getFeedbackSummary, listFeedback, openFeedbackConversation, patchFeedback } from '../lib/api';
 import { ApiError } from '../lib/http';
 import { relativeTime } from '../lib/labels';
 import {
@@ -38,6 +39,7 @@ function clampMessage(value: string) {
 
 export default function FeedbackPage() {
   const { push } = useToast();
+  const navigate = useNavigate();
   const [items, setItems] = useState<SiteFeedback[]>([]);
   const [total, setTotal] = useState(0);
   const [summary, setSummary] = useState<FeedbackSummary | null>(null);
@@ -81,6 +83,26 @@ export default function FeedbackPage() {
         setItems((current) => current.map((row) => (row.id === item.id ? { ...row, status: previous } : row)));
         if (selected?.id === item.id) setSelected({ ...item, status: previous });
         push(err instanceof ApiError ? err.message : 'Could not update feedback', 'error');
+      })
+      .finally(() => setSavingId(null));
+  }
+
+  function reply(item: SiteFeedback) {
+    if (item.conversationId) {
+      navigate(`/admin/inbox?conversation=${item.conversationId}`);
+      return;
+    }
+    if (!item.replyAvailable) {
+      push(item.replyUnavailableReason || 'Conversation unavailable for this older anonymous feedback.', 'error');
+      return;
+    }
+    setSavingId(item.id);
+    void openFeedbackConversation(item.id)
+      .then((result) => {
+        navigate(`/admin/inbox?conversation=${result.conversation.id}`);
+      })
+      .catch((err: unknown) => {
+        push(err instanceof ApiError ? err.message : 'Conversation unavailable for this older anonymous feedback.', 'error');
       })
       .finally(() => setSavingId(null));
   }
@@ -194,6 +216,7 @@ export default function FeedbackPage() {
                   <th>From</th>
                   <th>Date</th>
                   <th>Status</th>
+                  <th>Reply</th>
                 </tr>
               </thead>
               <tbody>
@@ -232,6 +255,27 @@ export default function FeedbackPage() {
                           </option>
                         ))}
                       </select>
+                    </td>
+                    <td>
+                      <div className="flex flex-wrap gap-2">
+                        <button type="button" className="btn" onClick={() => setSelected(item)}>
+                          View
+                        </button>
+                        {item.replyAvailable !== false && item.status !== 'spam' && item.status !== 'archived' ? (
+                          <button type="button" className="btn btn-primary" disabled={savingId === item.id} onClick={() => reply(item)}>
+                            Reply
+                          </button>
+                        ) : (
+                          <span className="text-[12px] text-[var(--color-muted)]" title={item.replyUnavailableReason || undefined}>
+                            {item.replyUnavailableReason || 'No conversation'}
+                          </span>
+                        )}
+                        {item.status === 'new' ? (
+                          <button type="button" className="btn" disabled={savingId === item.id} onClick={() => changeStatus(item, 'reviewed')}>
+                            Mark Reviewed
+                          </button>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -308,7 +352,39 @@ export default function FeedbackPage() {
                   </select>
                 </dd>
               </div>
+              <div>
+                <dt>Conversation status</dt>
+                <dd>{selected.conversationStatus ? selected.conversationStatus.replace(/_/g, ' ') : '—'}</dd>
+              </div>
+              <div>
+                <dt>Last team reply</dt>
+                <dd>
+                  {selected.lastTeamReplyAt
+                    ? `${relativeTime(selected.lastTeamReplyAt)}${selected.lastTeamReplyPreview ? ` · ${selected.lastTeamReplyPreview}` : ''}`
+                    : 'None yet'}
+                </dd>
+              </div>
+              <div>
+                <dt>Unread</dt>
+                <dd>{selected.unreadForVisitor ? 'Visitor has not seen the latest team reply' : 'No unread team reply'}</dd>
+              </div>
             </dl>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {selected.replyAvailable !== false && selected.status !== 'spam' && selected.status !== 'archived' ? (
+                <button type="button" className="btn btn-primary" disabled={savingId === selected.id} onClick={() => reply(selected)}>
+                  Open Conversation
+                </button>
+              ) : (
+                <p className="m-0 text-[13px] text-[var(--color-muted)]">
+                  {selected.replyUnavailableReason || 'Conversation unavailable for this older anonymous feedback.'}
+                </p>
+              )}
+              {selected.status === 'new' ? (
+                <button type="button" className="btn" disabled={savingId === selected.id} onClick={() => changeStatus(selected, 'reviewed')}>
+                  Mark Reviewed
+                </button>
+              ) : null}
+            </div>
           </aside>
         </div>
       ) : null}
