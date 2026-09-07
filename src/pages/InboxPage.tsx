@@ -324,10 +324,24 @@ export default function InboxPage() {
                 <div className="inbox-messages">
                   {messages.map((message) => (
                     <article key={message.id} className={message.senderType === 'team' || message.senderType === 'system' ? 'is-team' : 'is-visitor'}>
-                      <p className="m-0 text-[11px] font-bold text-[var(--color-muted)]">
-                        {message.senderType === 'team' || message.senderType === 'system' ? 'AI Trainers Team' : conversation.displayName}
-                      </p>
-                      <p className="mt-1 mb-0 whitespace-pre-wrap">{message.body}</p>
+                      {message.messageType === 'feedback' && message.feedback ? (
+                        <div className="inbox-feedback-card">
+                          <p className="m-0 text-[11px] font-bold text-[var(--color-muted)]">You shared feedback</p>
+                          <p className="mt-2 mb-0 text-[12px] font-semibold">{message.feedback.areaLabel}</p>
+                          <p className="mt-1 mb-0 text-[12px] text-[var(--color-muted)]">
+                            {(message.feedback.category || 'Feedback').replace(/_/g, ' ')}
+                            {message.feedback.subcategory ? ` · ${message.feedback.subcategory.replace(/_/g, ' ')}` : ''}
+                          </p>
+                          <p className="mt-2 mb-0 whitespace-pre-wrap">{message.feedback.message}</p>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="m-0 text-[11px] font-bold text-[var(--color-muted)]">
+                            {message.senderType === 'team' || message.senderType === 'system' ? 'AI Trainers Team' : conversation.displayName}
+                          </p>
+                          <p className="mt-1 mb-0 whitespace-pre-wrap">{message.body}</p>
+                        </>
+                      )}
                     </article>
                   ))}
                   {visitorTyping ? <p className="text-[12px] text-[var(--color-muted)]">Visitor is typing…</p> : null}

@@ -100,6 +100,7 @@ export const JOURNEY_EVENT_LABELS: Record<string, string> = {
   chat_started: 'Started conversation with AI Trainers Team',
   team_reply_received: 'Received a team reply',
   chat_resolved: 'Chat resolved',
+  team_replied_to_feedback: 'Team replied to feedback',
   platform_application_added: 'Applied to a platform',
   platform_assessment_invited: 'Platform assessment invited',
   platform_assessment_started: 'Platform assessment started',

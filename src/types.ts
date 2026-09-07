@@ -364,6 +364,10 @@ export type SiteFeedback = {
   journeyStage?: string | null;
   journeyLabel?: string | null;
   candidateName?: string | null;
+  conversationId?: string | null;
+  conversationStatus?: string | null;
+  lastTeamReplyAt?: string | null;
+  canReply?: boolean;
   status: FeedbackStatus;
   createdAt: string;
   updatedAt: string;
@@ -389,6 +393,16 @@ export type ChatMessage = {
   senderType: 'visitor' | 'candidate' | 'team' | 'system';
   senderLabel: string;
   body: string;
+  messageType?: 'text' | 'feedback';
+  feedbackId?: string | null;
+  feedback?: {
+    id: string;
+    category: string;
+    subcategory: string | null;
+    message: string;
+    rating: number | null;
+    areaLabel: string;
+  } | null;
   createdAt: string;
   readAt: string | null;
 };

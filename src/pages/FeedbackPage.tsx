@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getFeedbackSummary, listFeedback, patchFeedback } from '../lib/api';
+import { useNavigate } from 'react-router-dom';
+import { getFeedbackSummary, listFeedback, openFeedbackConversation, patchFeedback } from '../lib/api';
 import { ApiError } from '../lib/http';
 import { relativeTime } from '../lib/labels';
 import {
@@ -38,6 +39,7 @@ function clampMessage(value: string) {
 
 export default function FeedbackPage() {
   const { push } = useToast();
+  const navigate = useNavigate();
   const [items, setItems] = useState<SiteFeedback[]>([]);
   const [total, setTotal] = useState(0);
   const [summary, setSummary] = useState<FeedbackSummary | null>(null);
@@ -46,6 +48,21 @@ export default function FeedbackPage() {
   const [q, setQ] = useState('');
   const [selected, setSelected] = useState<SiteFeedback | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [openingId, setOpeningId] = useState<string | null>(null);
+
+  function replyTo(item: SiteFeedback) {
+    if (item.canReply === false) {
+      push('Conversation unavailable for this older anonymous feedback.', 'error');
+      return;
+    }
+    setOpeningId(item.id);
+    void openFeedbackConversation(item.id)
+      .then((result) => {
+        navigate(`/admin/inbox?conversation=${result.conversation.id}`);
+      })
+      .catch((err: unknown) => push(err instanceof ApiError ? err.message : 'Could not open conversation', 'error'))
+      .finally(() => setOpeningId(null));
+  }
 
   function reload(next = { status, category, q }) {
     return Promise.all([
@@ -194,6 +211,7 @@ export default function FeedbackPage() {
                   <th>From</th>
                   <th>Date</th>
                   <th>Status</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -232,6 +250,22 @@ export default function FeedbackPage() {
                           </option>
                         ))}
                       </select>
+                    </td>
+                    <td>
+                      <div className="flex flex-wrap gap-2">
+                        <button type="button" className="btn" onClick={() => setSelected(item)}>
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          disabled={item.canReply === false || openingId === item.id}
+                          title={item.canReply === false ? 'Conversation unavailable for this older anonymous feedback.' : 'Reply in Inbox'}
+                          onClick={() => replyTo(item)}
+                        >
+                          Reply
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -292,6 +326,14 @@ export default function FeedbackPage() {
                 <dd>{selected.firstSource || '—'}</dd>
               </div>
               <div>
+                <dt>Conversation</dt>
+                <dd>
+                  {selected.conversationId
+                    ? `${selected.conversationStatus?.replace(/_/g, ' ') || 'open'}${selected.lastTeamReplyAt ? ` · last team reply ${relativeTime(selected.lastTeamReplyAt)}` : ''}`
+                    : 'No conversation yet'}
+                </dd>
+              </div>
+              <div>
                 <dt>Status</dt>
                 <dd>
                   <select
@@ -309,6 +351,20 @@ export default function FeedbackPage() {
                 </dd>
               </div>
             </dl>
+            {selected.canReply === false ? (
+              <p className="mt-4 mb-0 text-[13px] text-[var(--color-muted)]">
+                Conversation unavailable for this older anonymous feedback.
+              </p>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-primary mt-4"
+                disabled={openingId === selected.id}
+                onClick={() => replyTo(selected)}
+              >
+                Open Conversation
+              </button>
+            )}
           </aside>
         </div>
       ) : null}
