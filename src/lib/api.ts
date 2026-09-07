@@ -289,3 +289,72 @@ export function downloadCsvFile(csv: string, filename: string) {
   link.click();
   URL.revokeObjectURL(url);
 }
+
+export function listChatConversations(params?: { status?: string; q?: string; page?: number }) {
+  const search = new URLSearchParams();
+  if (params?.status) search.set('status', params.status);
+  if (params?.q) search.set('q', params.q);
+  if (params?.page) search.set('page', String(params.page));
+  const query = search.toString();
+  return request<{
+    total: number;
+    unreadCount: number;
+    page: number;
+    pageSize: number;
+    items: import('../types').ChatConversation[];
+  }>(`/v1/admin/chat/conversations${query ? `?${query}` : ''}`);
+}
+
+export function getChatConversation(id: string) {
+  return request<{
+    conversation: import('../types').ChatConversation;
+    messages: import('../types').ChatMessage[];
+    hasMore: boolean;
+    teamOnline: boolean;
+  }>(`/v1/admin/chat/conversations/${id}`);
+}
+
+export function listChatMessages(id: string, before?: string) {
+  const search = new URLSearchParams({ limit: '40' });
+  if (before) search.set('before', before);
+  return request<{ messages: import('../types').ChatMessage[]; hasMore: boolean; unreadCount: number }>(
+    `/v1/admin/chat/conversations/${id}/messages?${search.toString()}`,
+  );
+}
+
+export function sendChatReply(id: string, body: string) {
+  return request<{
+    conversation: import('../types').ChatConversation;
+    message: import('../types').ChatMessage;
+  }>(`/v1/admin/chat/conversations/${id}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ body }),
+  });
+}
+
+export function markChatRead(id: string) {
+  return request<{ ok: boolean }>(`/v1/admin/chat/conversations/${id}/read`, { method: 'POST' });
+}
+
+export function patchChatConversation(id: string, status: import('../types').ChatStatus) {
+  return request<{ conversation: import('../types').ChatConversation }>(`/v1/admin/chat/conversations/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+}
+
+export function getChatUnread() {
+  return request<{ unreadCount: number; teamOnline: boolean }>('/v1/admin/chat/unread');
+}
+
+export function getChatSocketToken() {
+  return request<{ token: string }>('/v1/admin/chat/socket-token', { method: 'POST' });
+}
+
+export function realtimeUrl() {
+  if (import.meta.env.VITE_REALTIME_URL) return String(import.meta.env.VITE_REALTIME_URL);
+  if (typeof window === 'undefined') return '';
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1') return 'http://127.0.0.1:4000';
+  return 'https://api.aitrainers.coach';
+}

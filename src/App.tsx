@@ -7,6 +7,7 @@ import ApplicationsPage from './pages/ApplicationsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import CalendarPage from './pages/CalendarPage';
 import FeedbackPage from './pages/FeedbackPage';
+import InboxPage from './pages/InboxPage';
 import JobSourcesPage from './pages/JobSourcesPage';
 import JobsPage from './pages/JobsPage';
 import LoginPage from './pages/LoginPage';
@@ -28,6 +29,7 @@ export default function App() {
                 <Route path="calendar" element={<CalendarPage />} />
                 <Route path="job-sources" element={<JobSourcesPage />} />
                 <Route path="jobs" element={<JobsPage />} />
+                <Route path="inbox" element={<InboxPage />} />
                 <Route path="feedback" element={<FeedbackPage />} />
                 <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="settings" element={<SettingsPage />} />

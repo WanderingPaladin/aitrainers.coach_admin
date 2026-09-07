@@ -379,3 +379,47 @@ export type FeedbackSummary = {
   areas: Array<{ label: string; count: number }>;
   similar: Array<{ category: string; subcategory: string | null; pagePath: string; count: number; label: string }>;
 };
+
+export const CHAT_STATUSES = ['open', 'waiting_for_team', 'waiting_for_user', 'resolved', 'closed'] as const;
+export type ChatStatus = (typeof CHAT_STATUSES)[number];
+
+export type ChatMessage = {
+  id: string;
+  conversationId: string;
+  senderType: 'visitor' | 'candidate' | 'team' | 'system';
+  senderLabel: string;
+  body: string;
+  createdAt: string;
+  readAt: string | null;
+};
+
+export type ChatConversation = {
+  id: string;
+  status: ChatStatus;
+  topic: string | null;
+  topicLabel: string | null;
+  displayName: string;
+  startedFromPage: string | null;
+  firstSource: string | null;
+  currentFunnelStage: string | null;
+  lastMessageAt: string;
+  lastMessage: ChatMessage | null;
+  unreadCount: number;
+  applicationId: string | null;
+  contactEmail: string | null;
+  context?: {
+    displayName: string;
+    profession: string | null;
+    location: string | null;
+    email: string | null;
+    source: string | null;
+    journeyStage: string;
+    journeyLabel: string;
+    applicationId: string | null;
+    applicationCreatedAt: string | null;
+    introCall: { id: string; startsAt: string; attendance: string } | null;
+    startedFromPage: string | null;
+    opportunityTitle: string | null;
+    opportunityPlatform: string | null;
+  };
+};
