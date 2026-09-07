@@ -239,7 +239,7 @@ export default function FeedbackPage() {
                         <span className="line-clamp-2">{clampMessage(item.message)}</span>
                       </button>
                     </td>
-                    <td>{item.userId ? 'Logged in' : 'Anonymous'}{item.email ? ` · ${item.email}` : ''}</td>
+                    <td>{item.candidateName || (item.userId ? 'Logged in' : 'Anonymous visitor')}{item.email ? ` · ${item.email}` : ''}</td>
                     <td>{relativeTime(item.createdAt)}</td>
                     <td>
                       <select
