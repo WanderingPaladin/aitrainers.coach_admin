@@ -287,6 +287,14 @@ export default function InboxPage() {
                   <div>
                     <h2>{conversation.displayName}</h2>
                     <p>{STATUS_LABELS[conversation.status]}{conversation.topicLabel ? ` · ${conversation.topicLabel}` : ''}</p>
+                    {context?.feedback ? (
+                      <p>
+                        Feedback
+                        {context.feedback.subcategoryLabel ? ` · ${context.feedback.subcategoryLabel}` : ''}
+                        {context.feedback.categoryLabel ? ` · ${context.feedback.categoryLabel}` : ''}
+                        {` · Submitted ${relativeTime(context.feedback.submittedAt || context.feedback.createdAt)}`}
+                      </p>
+                    ) : null}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {conversation.status === 'closed' || conversation.status === 'resolved' ? (
@@ -323,12 +331,29 @@ export default function InboxPage() {
                 ) : null}
                 <div className="inbox-messages">
                   {messages.map((message) => (
-                    <article key={message.id} className={message.senderType === 'team' || message.senderType === 'system' ? 'is-team' : 'is-visitor'}>
-                      <p className="m-0 text-[11px] font-bold text-[var(--color-muted)]">
-                        {message.senderType === 'team' || message.senderType === 'system' ? 'AI Trainers Team' : conversation.displayName}
-                      </p>
-                      <p className="mt-1 mb-0 whitespace-pre-wrap">{message.body}</p>
-                    </article>
+                    message.messageType === 'feedback' ? (
+                      <article key={message.id} className="is-visitor inbox-feedback-card">
+                        <p className="m-0 text-[11px] font-bold text-[var(--color-muted)]">Visitor shared feedback</p>
+                        <p className="mt-2 mb-0 text-[12px] font-bold">
+                          {message.feedback?.subcategoryLabel || message.feedback?.categoryLabel || 'Feedback'}
+                        </p>
+                        {message.feedback?.categoryLabel && message.feedback?.subcategoryLabel ? (
+                          <p className="mt-1 mb-0 text-[12px] text-[var(--color-muted)]">{message.feedback.categoryLabel}</p>
+                        ) : null}
+                        {message.feedback?.message ? (
+                          <p className="mt-2 mb-0 whitespace-pre-wrap">“{message.feedback.message}”</p>
+                        ) : (
+                          <p className="mt-2 mb-0 whitespace-pre-wrap">{message.body}</p>
+                        )}
+                      </article>
+                    ) : (
+                      <article key={message.id} className={message.senderType === 'team' || message.senderType === 'system' ? 'is-team' : 'is-visitor'}>
+                        <p className="m-0 text-[11px] font-bold text-[var(--color-muted)]">
+                          {message.senderType === 'team' || message.senderType === 'system' ? 'AI Trainers Team' : conversation.displayName}
+                        </p>
+                        <p className="mt-1 mb-0 whitespace-pre-wrap">{message.body}</p>
+                      </article>
+                    )
                   ))}
                   {visitorTyping ? <p className="text-[12px] text-[var(--color-muted)]">Visitor is typing…</p> : null}
                 </div>

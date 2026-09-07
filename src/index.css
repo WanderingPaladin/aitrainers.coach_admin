@@ -626,6 +626,11 @@ details summary::-webkit-details-marker { display: none; }
 .inbox-messages article { max-width: 80%; padding: 10px 12px; border-radius: 12px; }
 .inbox-messages .is-team { background: #f3f5fb; justify-self: start; }
 .inbox-messages .is-visitor { background: #eaf0ff; justify-self: end; }
+.inbox-feedback-card {
+  justify-self: end;
+  background: #fff !important;
+  border: 1px solid var(--color-line);
+}
 .inbox-composer { display: grid; gap: 8px; padding: 16px; border-top: 1px solid var(--color-line); }
 .inbox-context { padding: 16px; border-left: 1px solid var(--color-line); }
 .inbox-context h3 { margin: 0 0 12px; font-size: 13px; }

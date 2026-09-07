@@ -345,7 +345,9 @@ export type FeedbackCategory = (typeof FEEDBACK_CATEGORIES)[number];
 export type SiteFeedback = {
   id: string;
   category: FeedbackCategory | string;
+  categoryLabel?: string;
   subcategory: string | null;
+  subcategoryLabel?: string | null;
   message: string;
   rating: number | null;
   pagePath: string;
@@ -360,10 +362,17 @@ export type SiteFeedback = {
   visitorId?: string | null;
   sessionId?: string | null;
   applicationId?: string | null;
+  conversationId?: string | null;
+  conversationStatus?: string | null;
+  lastTeamReplyAt?: string | null;
+  lastTeamReplyPreview?: string | null;
+  unreadForVisitor?: boolean;
   firstSource?: string | null;
   journeyStage?: string | null;
   journeyLabel?: string | null;
   candidateName?: string | null;
+  replyAvailable?: boolean;
+  replyUnavailableReason?: string | null;
   status: FeedbackStatus;
   createdAt: string;
   updatedAt: string;
@@ -389,6 +398,19 @@ export type ChatMessage = {
   senderType: 'visitor' | 'candidate' | 'team' | 'system';
   senderLabel: string;
   body: string;
+  messageType?: string;
+  feedbackId?: string | null;
+  feedback?: {
+    id: string;
+    category: string;
+    categoryLabel: string;
+    subcategory: string | null;
+    subcategoryLabel: string | null;
+    message: string;
+    rating: number | null;
+    pagePath: string;
+    createdAt: string;
+  } | null;
   createdAt: string;
   readAt: string | null;
 };
@@ -421,5 +443,15 @@ export type ChatConversation = {
     startedFromPage: string | null;
     opportunityTitle: string | null;
     opportunityPlatform: string | null;
+    feedback?: {
+      id: string;
+      category: string;
+      categoryLabel: string;
+      subcategory: string | null;
+      subcategoryLabel: string | null;
+      message: string;
+      submittedAt?: string;
+      createdAt: string;
+    } | null;
   };
 };

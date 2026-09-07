@@ -13,6 +13,10 @@ function eventCopy(event: JourneyEvent): string {
     const category = typeof event.metadata === 'object' && event.metadata && 'category' in event.metadata
       ? String((event.metadata as { category?: string }).category).replace(/_/g, ' ')
       : '';
+    const subcategory = typeof event.metadata === 'object' && event.metadata && 'subcategory' in event.metadata
+      ? String((event.metadata as { subcategory?: string }).subcategory || '').replace(/_/g, ' ')
+      : '';
+    if (subcategory && category) return `${base}: ${subcategory}`;
     return category ? `${base}: ${category}` : base;
   }
   if (event.platform) {
