@@ -242,6 +242,15 @@ export function patchFeedback(id: string, status: import('../types').FeedbackSta
   });
 }
 
+export function openFeedbackConversation(id: string) {
+  return request<{
+    conversation: import('../types').ChatConversation;
+    messages: import('../types').ChatMessage[];
+    hasMore: boolean;
+    teamOnline?: boolean;
+  }>(`/v1/admin/feedback/${id}/conversation`, { method: 'POST' });
+}
+
 export function getFunnelAnalytics(params: { range?: string; from?: string; to?: string }) {
   const search = new URLSearchParams();
   if (params.range) search.set('range', params.range);
