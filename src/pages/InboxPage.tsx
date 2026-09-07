@@ -46,6 +46,7 @@ export default function InboxPage() {
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [visitorTyping, setVisitorTyping] = useState(false);
+  const [listError, setListError] = useState('');
   const statusRef = useRef(status);
   const qRef = useRef(q);
   const selectedIdRef = useRef(selectedId);
@@ -55,13 +56,26 @@ export default function InboxPage() {
   selectedIdRef.current = selectedId;
 
   function reloadList() {
+    setListError('');
     return listChatConversations({ status: statusRef.current, q: qRef.current, page: 1 })
       .then((result) => {
         setItems(result.items);
         setTotal(result.total);
         setUnreadCount(result.unreadCount);
       })
-      .catch((err: unknown) => push(err instanceof ApiError ? err.message : 'Could not load inbox', 'error'));
+      .catch((err: unknown) => {
+        if (err instanceof ApiError && err.status === 401) {
+          setListError('Sign in again to load conversations.');
+          push(err.message, 'error');
+          return;
+        }
+        if (err instanceof ApiError && err.status === 403) {
+          setListError('You do not have access to Inbox.');
+          push(err.message, 'error');
+          return;
+        }
+        setListError('Unable to load conversations.');
+      });
   }
 
   function openConversation(id: string) {
@@ -83,47 +97,64 @@ export default function InboxPage() {
   }
 
   useEffect(() => {
+    let cancelled = false;
     void reloadList();
     const selected = params.get('conversation');
     if (selected) openConversation(selected);
-    void getAdminChatSocket().then((socket) => {
-      if (!socket) return;
-      const onInbox = () => void reloadList();
-      const onMessage = (payload: { conversation?: ChatConversation; message?: ChatMessage }) => {
-        if (payload.conversation?.id === selectedIdRef.current && payload.message) {
-          setMessages((current) =>
-            current.some((item) => item.id === payload.message!.id) ? current : [...current, payload.message!],
-          );
-          setConversation((current) => payload.conversation ?? current);
-        }
-        void reloadList();
-      };
-      const onTypingStart = (payload: { conversationId?: string; role?: string }) => {
-        if (payload.conversationId === selectedIdRef.current && payload.role !== 'team') setVisitorTyping(true);
-      };
-      const onTypingStop = (payload: { conversationId?: string }) => {
-        if (payload.conversationId === selectedIdRef.current) setVisitorTyping(false);
-      };
-      const onReconnect = () => {
+
+    const onInbox = () => void reloadList();
+    const onMessage = (payload: { conversation?: ChatConversation; message?: ChatMessage }) => {
+      if (payload.conversation?.id === selectedIdRef.current && payload.message) {
+        setMessages((current) =>
+          current.some((item) => item.id === payload.message!.id) ? current : [...current, payload.message!],
+        );
+        setConversation((current) => payload.conversation ?? current);
+      }
+      void reloadList();
+    };
+    const onTypingStart = (payload: { conversationId?: string; role?: string }) => {
+      if (payload.conversationId === selectedIdRef.current && payload.role !== 'team') setVisitorTyping(true);
+    };
+    const onTypingStop = (payload: { conversationId?: string }) => {
+      if (payload.conversationId === selectedIdRef.current) setVisitorTyping(false);
+    };
+    const onReconnect = () => {
+      void getAdminChatSocket().then((socket) => {
         const id = selectedIdRef.current;
-        if (id) socket.emit('conversation:join', id);
-        void reloadList();
-        if (id) {
-          void getChatConversation(id)
-            .then((result) => {
-              setConversation(result.conversation);
-              setMessages(result.messages);
-              setHasMore(result.hasMore);
-            })
-            .catch(() => {});
-        }
-      };
+        if (id) socket?.emit('conversation:join', id);
+      });
+      void reloadList();
+      const id = selectedIdRef.current;
+      if (id) {
+        void getChatConversation(id)
+          .then((result) => {
+            setConversation(result.conversation);
+            setMessages(result.messages);
+            setHasMore(result.hasMore);
+          })
+          .catch(() => {});
+      }
+    };
+
+    void getAdminChatSocket().then((socket) => {
+      if (cancelled || !socket) return;
       socket.on('inbox:update', onInbox);
       socket.on('message:new', onMessage);
       socket.on('typing:start', onTypingStart);
       socket.on('typing:stop', onTypingStop);
       socket.on('connect', onReconnect);
     });
+
+    return () => {
+      cancelled = true;
+      void getAdminChatSocket().then((socket) => {
+        socket?.off('inbox:update', onInbox);
+        socket?.off('message:new', onMessage);
+        socket?.off('typing:start', onTypingStart);
+        socket?.off('typing:stop', onTypingStop);
+        socket?.off('connect', onReconnect);
+      });
+    };
   }, []);
 
   useEffect(() => {
@@ -190,11 +221,8 @@ export default function InboxPage() {
             className={status === filter.id ? 'chip is-active' : 'chip'}
             onClick={() => {
               setStatus(filter.id);
-              void listChatConversations({ status: filter.id, q }).then((result) => {
-                setItems(result.items);
-                setTotal(result.total);
-                setUnreadCount(result.unreadCount);
-              });
+              statusRef.current = filter.id;
+              void reloadList();
             }}
           >
             {filter.label}
@@ -212,14 +240,18 @@ export default function InboxPage() {
         </form>
       </div>
 
+      {listError ? (
+        <div className="card mt-4 p-5">
+          <p className="m-0 text-[14px] font-semibold">{listError}</p>
+          <button type="button" className="btn btn-primary mt-3" onClick={() => void reloadList()}>
+            Retry
+          </button>
+        </div>
+      ) : null}
+
       <div className="inbox-layout">
         <section className="card inbox-list">
-          {!preview.length ? (
-            <div className="p-5">
-              <h2 className="m-0 text-[15px] font-bold">No conversations yet</h2>
-              <p className="mt-2 mb-0 text-[13px] text-[var(--color-muted)]">New visitor chats will appear here.</p>
-            </div>
-          ) : (
+          {preview.length ? (
             <ul>
               {preview.map((item) => (
                 <li key={item.id}>
@@ -236,6 +268,11 @@ export default function InboxPage() {
                 </li>
               ))}
             </ul>
+          ) : listError ? null : (
+            <div className="p-5">
+              <h2 className="m-0 text-[15px] font-bold">No conversations yet</h2>
+              <p className="mt-2 mb-0 text-[13px] text-[var(--color-muted)]">New visitor chats will appear here.</p>
+            </div>
           )}
           <p className="inbox-count">{total} conversations</p>
         </section>

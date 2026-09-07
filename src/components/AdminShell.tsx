@@ -6,6 +6,7 @@ import { getAdminChatSocket } from '../lib/chat-socket';
 import AdminSidebar from './AdminSidebar';
 import Brand from './Brand';
 import { useAuth } from './AuthProvider';
+import TeamPresenceProvider from './TeamPresenceProvider';
 
 export default function AdminShell() {
   const { ready, admin } = useAuth();
@@ -15,6 +16,7 @@ export default function AdminShell() {
 
   useEffect(() => {
     if (!admin) return;
+    let cancelled = false;
     const refresh = () => {
       void getChatUnread()
         .then((result) => setInboxUnread(result.unreadCount))
@@ -22,10 +24,18 @@ export default function AdminShell() {
     };
     refresh();
     void getAdminChatSocket().then((socket) => {
-      socket?.on('inbox:update', refresh);
-      socket?.on('message:new', refresh);
+      if (cancelled || !socket) return;
+      socket.on('inbox:update', refresh);
+      socket.on('message:new', refresh);
     });
-  }, [admin]);
+    return () => {
+      cancelled = true;
+      void getAdminChatSocket().then((socket) => {
+        socket?.off('inbox:update', refresh);
+        socket?.off('message:new', refresh);
+      });
+    };
+  }, [admin?.name]);
 
   if (!ready) {
     return (
@@ -40,24 +50,26 @@ export default function AdminShell() {
   }
 
   return (
-    <div className="admin-shell">
-      <div className="mobile-header">
-        <Brand />
-        <button type="button" className="btn" aria-label="Open navigation" onClick={() => setOpen(true)}>
-          <Menu size={18} />
-        </button>
-      </div>
-      <AdminSidebar inboxUnread={inboxUnread} />
-      {open ? (
-        <div className="drawer-backdrop" onClick={() => setOpen(false)}>
-          <div className="drawer drawer-left" onClick={(event) => event.stopPropagation()}>
-            <AdminSidebar inboxUnread={inboxUnread} onNavigate={() => setOpen(false)} />
-          </div>
+    <TeamPresenceProvider>
+      <div className="admin-shell">
+        <div className="mobile-header">
+          <Brand />
+          <button type="button" className="btn" aria-label="Open navigation" onClick={() => setOpen(true)}>
+            <Menu size={18} />
+          </button>
         </div>
-      ) : null}
-      <main className="min-w-0">
-        <Outlet />
-      </main>
-    </div>
+        <AdminSidebar inboxUnread={inboxUnread} />
+        {open ? (
+          <div className="drawer-backdrop" onClick={() => setOpen(false)}>
+            <div className="drawer drawer-left" onClick={(event) => event.stopPropagation()}>
+              <AdminSidebar inboxUnread={inboxUnread} onNavigate={() => setOpen(false)} />
+            </div>
+          </div>
+        ) : null}
+        <main className="min-w-0">
+          <Outlet />
+        </main>
+      </div>
+    </TeamPresenceProvider>
   );
 }

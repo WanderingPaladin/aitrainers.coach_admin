@@ -14,19 +14,48 @@ type ErrorBody = {
   error?: { code?: string; message?: string };
 };
 
+function isDevChatDebug() {
+  if (import.meta.env.DEV) return true;
+  if (typeof window === 'undefined') return false;
+  return /aitrainersdev|localhost|127\.0\.0\.1|netlify\.app$/.test(window.location.hostname);
+}
+
+function hasRequestBody(body: BodyInit | null | undefined): boolean {
+  return body !== undefined && body !== null && body !== '';
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers = new Headers(init?.headers);
+  const body = init?.body;
+  const jsonBody = hasRequestBody(body) && !(body instanceof FormData);
+
+  if (jsonBody && !headers.has('content-type')) {
+    headers.set('content-type', 'application/json');
+  }
+  if (!jsonBody) {
+    headers.delete('content-type');
+  }
+
+  const method = (init?.method ?? 'GET').toUpperCase();
+  if (isDevChatDebug() && path.includes('/chat')) {
+    console.log('[Inbox] request:', method, path);
+  }
+
   let response: Response;
   try {
     response = await fetch(path, {
       ...init,
+      method,
       credentials: 'include',
-      headers: {
-        ...(init?.body instanceof FormData ? {} : { 'content-type': 'application/json' }),
-        ...(init?.headers ?? {}),
-      },
+      headers,
+      body: jsonBody ? body : undefined,
     });
   } catch {
     throw new ApiError(0, 'NETWORK_ERROR', 'Could not reach the API. Is the backend running?');
+  }
+
+  if (isDevChatDebug() && path.includes('/chat')) {
+    console.log('[Inbox] response:', response.status, path);
   }
 
   if (response.status === 204) {

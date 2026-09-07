@@ -24,6 +24,7 @@ export default function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/admin" element={<AdminShell />}>
                 <Route index element={<OverviewPage />} />
+                <Route path="dashboard" element={<OverviewPage />} />
                 <Route path="applications" element={<ApplicationsPage />} />
                 <Route path="applications/:id" element={<ApplicationsPage />} />
                 <Route path="calendar" element={<CalendarPage />} />

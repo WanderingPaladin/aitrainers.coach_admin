@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ApiError } from '../lib/http';
 import { getMe, login as loginRequest, logout as logoutRequest } from '../lib/api';
+import { disconnectAdminChatSocket } from '../lib/chat-socket';
 
 type AuthState = {
   ready: boolean;
@@ -43,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAdmin(result.admin);
       },
       logout: async () => {
+        disconnectAdminChatSocket();
         await logoutRequest();
         setAdmin(null);
       },
